@@ -295,43 +295,26 @@ export default function LandingPage() {
         </div>
 
         {/* Right 45% — Hero Illustration */}
-        <div style={{ flex: '0 0 45%', animation: 'fadeIn 0.6s 300ms both', position: 'relative' }}>
-          <div style={{
-            position: 'relative',
-            borderRadius: 16,
-            overflow: 'hidden',
-            border: '1px solid var(--border)',
-            boxShadow: 'var(--shadow-lg)',
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-            aspectRatio: '3 / 2',
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.transform = 'translateY(-6px)';
-            e.currentTarget.style.boxShadow = '0 20px 40px rgba(196,131,74,0.15), var(--shadow-lg)';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-          }}
-          >
-            <img 
-              src="/hero-illustration.png" 
-              alt="Human collaborating with AI teammate" 
-              style={{
-                width: '100%',
-                height: '100%',
-                display: 'block',
-                objectFit: 'cover',
-              }}
-            />
-            {/* Subtle overlay gradient to match the warm color scheme */}
-            <div style={{
-              position: 'absolute',
-              top: 0, left: 0, right: 0, bottom: 0,
-              background: 'linear-gradient(to bottom, transparent 60%, rgba(24,21,16,0.35))',
-              pointerEvents: 'none'
-            }} />
-          </div>
+        <div style={{ flex: '0 0 45%', animation: 'fadeIn 0.6s 300ms both', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img 
+            src="/hero-illustration.png" 
+            alt="Human collaborating with AI teammate" 
+            style={{
+              width: '100%',
+              height: 'auto',
+              display: 'block',
+              filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.25))',
+              transition: 'transform 0.3s ease, filter 0.3s ease',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translateY(-6px)';
+              e.currentTarget.style.filter = 'drop-shadow(0 20px 32px rgba(196,131,74,0.2))';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.filter = 'drop-shadow(0 12px 24px rgba(0,0,0,0.25))';
+            }}
+          />
         </div>
       </section>
 
