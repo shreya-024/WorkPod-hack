@@ -92,7 +92,6 @@ export default function DashboardPage() {
           <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--text-tertiary)' }}>Loading your sessions...</div>
         ) : sessions.length === 0 ? (
           <div className="card" style={{ textAlign: 'center', padding: '60px 24px' }}>
-            <div style={{ fontSize: '3rem', marginBottom: 16 }}>📊</div>
             <h3 className="font-display" style={{ fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>No sessions yet</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>Complete a simulation to start tracking your progress.</p>
             <button className="btn btn-accent" onClick={() => navigate('/select')}>Start a Simulation</button>

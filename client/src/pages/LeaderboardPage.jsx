@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar.jsx';
 
 const API = 'http://localhost:5000';
 const ROLE_LABEL = { sde: 'Software Engineer', pm: 'Product Manager', hr: 'HR Manager', ml_intern: 'ML Intern', sde_intern: 'SDE Intern' };
-const MEDAL = ['🥇', '🥈', '🥉'];
+const MEDAL = ['1st', '2nd', '3rd'];
 const ROLES = ['sde', 'pm', 'hr', 'ml_intern', 'sde_intern'];
 
 export default function LeaderboardPage() {
@@ -73,7 +73,6 @@ export default function LeaderboardPage() {
           <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--text-tertiary)' }}>Loading leaderboard...</div>
         ) : sorted.length === 0 ? (
           <div className="card" style={{ textAlign: 'center', padding: '60px 24px' }}>
-            <div style={{ fontSize: '3rem', marginBottom: 16 }}>🏆</div>
             <h3 className="font-display" style={{ fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>No entries yet</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>Be the first on the leaderboard!</p>
             <button className="btn btn-accent" onClick={() => navigate('/select')}>Start a Simulation</button>
@@ -93,7 +92,9 @@ export default function LeaderboardPage() {
                       border: isMe ? '2px solid var(--accent)' : '1px solid var(--border)',
                       background: isMe ? 'var(--accent-muted)' : undefined,
                     }}>
-                      <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>{MEDAL[rank]}</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent)', fontFamily: 'var(--font-display)', marginBottom: 12 }}>
+                        {MEDAL[rank]} Place
+                      </div>
                       <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: 2 }}>
                         {e.name}{isMe ? ' (you)' : ''}
                       </div>
@@ -119,7 +120,7 @@ export default function LeaderboardPage() {
                       background: isMe ? 'var(--accent-muted)' : (i % 2 === 0 ? 'var(--bg-tertiary)' : 'transparent'),
                       border: isMe ? '1px solid var(--accent)' : '1px solid transparent',
                     }}>
-                      <div style={{ width: 28, fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-tertiary)', textAlign: 'center' }}>
+                      <div style={{ width: 36, fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-tertiary)', textAlign: 'center' }}>
                         {i < 3 ? MEDAL[i] : `#${i + 1}`}
                       </div>
                       <div style={{ flex: 1 }}>

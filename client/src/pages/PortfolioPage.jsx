@@ -4,7 +4,6 @@ import Navbar from '../components/Navbar.jsx';
 
 const API = 'http://localhost:5000';
 const ROLE_LABEL = { sde: 'Software Engineer', pm: 'Product Manager', hr: 'HR Manager', ml_intern: 'ML Intern', sde_intern: 'SDE Intern' };
-const ROLE_EMOJI = { sde: '💻', pm: '📋', hr: '🤝', ml_intern: '🤖', sde_intern: '👨‍💻' };
 
 function RoleCard({ role, sessions }) {
   const scores = sessions.map(s => s.score?.overallScore ?? 0);
@@ -16,8 +15,8 @@ function RoleCard({ role, sessions }) {
   return (
     <div className="card" style={{ padding: 24 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--accent-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
-          {ROLE_EMOJI[role] || '🏢'}
+        <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--accent-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 800, color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>
+          {role.toUpperCase()}
         </div>
         <div>
           <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{ROLE_LABEL[role] || role}</div>
@@ -96,7 +95,6 @@ export default function PortfolioPage() {
           <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--text-tertiary)' }}>Loading your portfolio...</div>
         ) : sessions.length === 0 ? (
           <div className="card" style={{ textAlign: 'center', padding: '60px 24px' }}>
-            <div style={{ fontSize: '3rem', marginBottom: 16 }}>🌱</div>
             <h3 className="font-display" style={{ fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>Your journey starts here</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>Complete your first simulation to build your portfolio.</p>
             <button className="btn btn-accent" onClick={() => navigate('/select')}>Start a Simulation</button>

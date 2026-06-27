@@ -33,9 +33,9 @@ export default function Navbar({ onSignIn, onGetStarted, showAuth = true, rightC
   };
 
   const navLinks = [
-    { label: '📊 Dashboard',   path: '/dashboard' },
-    { label: '🗂️ Portfolio',    path: '/portfolio' },
-    { label: '🏆 Leaderboard', path: '/leaderboard' },
+    { label: 'Dashboard',   path: '/dashboard' },
+    { label: 'Portfolio',    path: '/portfolio' },
+    { label: 'Leaderboard', path: '/leaderboard' },
   ];
 
   return (
@@ -169,7 +169,7 @@ export default function Navbar({ onSignIn, onGetStarted, showAuth = true, rightC
                         onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-tertiary)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}
                       >
-                        🚪 Sign Out
+                        Sign Out
                       </button>
                     </div>
                   </div>
