@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid';
-import { callGemini, callMentorGemini } from '../services/geminiService.js';
+import { callLLM, callMentorLLM } from '../services/groqService.js';
+import { recallMemories } from '../services/hindsightService.js';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -278,9 +279,32 @@ export function initRoomManager(io) {
 
       try {
         const useMentor = channel === 'mentor';
+
+        // ─── Hindsight: inject past-session memories into mentor context ──
+        let enrichedContent = content;
+        if (useMentor && currentUser?.userId) {
+          try {
+            const memories = await recallMemories(
+              currentUser.userId,
+              room.role,
+              content,
+              3,
+            );
+            if (memories.length > 0) {
+              const memoryBlock = memories
+                .map((m, i) => `[Past Session ${i + 1}]: ${m}`)
+                .join('\n');
+              enrichedContent = `[CONTEXT FROM PAST SESSIONS — use this to personalise your advice]:\n${memoryBlock}\n\n[CURRENT QUESTION]: ${content}`;
+            }
+          } catch (recallErr) {
+            // Non-blocking — mentor still works without memory
+            console.warn('[hindsight] Recall failed for mentor (non-blocking):', recallErr.message);
+          }
+        }
+
         const aiText = useMentor
-          ? await callMentorGemini(room.mentorHistory, content, room.scenario)
-          : await callGemini(
+          ? await callMentorLLM(room.mentorHistory, enrichedContent, room.scenario)
+          : await callLLM(
               room.history,
               content,
               room.history.length === 0 ? room.systemPrompt : null,
@@ -319,7 +343,7 @@ export function initRoomManager(io) {
         logMessage(room, aiMsg);
         io.to(room.code).emit('new-message', aiMsg);
       } catch (err) {
-        console.error('Gemini error:', err.message);
+        console.error('LLM error:', err.message);
         const errMsg = {
           sender: 'System',
           senderType: 'system',
@@ -347,7 +371,7 @@ export function initRoomManager(io) {
 
       io.to(room.code).emit('ai-typing', { typing: true });
       try {
-        const aiText = await callGemini(room.history, room.emergencyPrompt, null);
+        const aiText = await callLLM(room.history, room.emergencyPrompt, null);
         room.history.push({ role: 'user', parts: [{ text: room.emergencyPrompt }] });
         room.history.push({ role: 'model', parts: [{ text: aiText }] });
         if (room.history.length > 30) {
@@ -364,7 +388,7 @@ export function initRoomManager(io) {
         logMessage(room, emergencyMsg);
         io.to(room.code).emit('new-message', emergencyMsg);
       } catch (err) {
-        console.error('Emergency Gemini error:', err.message);
+        console.error('Emergency LLM error:', err.message);
       } finally {
         io.to(room.code).emit('ai-typing', { typing: false });
       }

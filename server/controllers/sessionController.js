@@ -1,5 +1,6 @@
 import Session from '../models/Session.js';
-import { evaluateSession } from '../services/geminiService.js';
+import { evaluateSession } from '../services/groqService.js';
+import { retainSessionMemory } from '../services/hindsightService.js';
 
 // POST /api/session/end
 export const endSession = async (req, res) => {
@@ -20,7 +21,7 @@ export const endSession = async (req, res) => {
       return res.status(400).json({ error: 'role and roomId are required' });
     }
 
-    // Call Gemini evaluator
+    // Call LLM evaluator
     let report;
     try {
       report = await evaluateSession({
@@ -40,7 +41,7 @@ export const endSession = async (req, res) => {
         taskManagement: (tasksCompleted?.length || 0) * 25,
         pressureHandling: emergencyTriggered ? 65 : 50,
         feedback: [
-          'Session evaluation unavailable — Gemini API error.',
+          'Session evaluation unavailable — AI API error.',
           'Your participation has been recorded.',
           'Try again for a detailed performance report.',
         ],
@@ -50,8 +51,9 @@ export const endSession = async (req, res) => {
 
     // Save to DB only for authenticated (non-guest) users
     const isRealUser = userId && !userId.startsWith('guest_');
+    let savedSession = null;
     if (isRealUser) {
-      await Session.create({
+      savedSession = await Session.create({
         userId,
         guestId: null,
         role,
@@ -70,6 +72,25 @@ export const endSession = async (req, res) => {
         },
         report, // Full report object stored for reference
       });
+
+      // ─── Hindsight memory retention ──────────────────────────────────
+      // Runs AFTER MongoDB save. Wrapped in try/catch so Hindsight
+      // failures never affect the session save or API response.
+      try {
+        await retainSessionMemory({
+          mongoUserId: savedSession.userId._id
+            ? savedSession.userId._id.toString()
+            : savedSession.userId.toString(),
+          role,
+          report,
+          tasksCompleted: tasksCompleted || [],
+          emergencyTriggered: !!emergencyTriggered,
+          durationSeconds: durationSeconds || 0,
+        });
+      } catch (hindsightErr) {
+        // Log and move on — the session is already persisted in MongoDB
+        console.error('[hindsight] Memory retention failed (non-blocking):', hindsightErr.message);
+      }
     }
 
     res.json({ report, saved: isRealUser });

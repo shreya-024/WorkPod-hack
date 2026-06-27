@@ -456,7 +456,7 @@ export default function SimulationPage() {
             Analyzing your performance...
           </p>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-            Gemini is reviewing your session transcript
+            AI is reviewing your session transcript
           </p>
         </div>
       )}

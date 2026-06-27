@@ -25,7 +25,7 @@ const ScoreSchema = new mongoose.Schema({
 const SessionSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   guestId: { type: String, default: null },
-  role: { type: String, enum: ['sde', 'hr', 'pm'], required: true },
+  role: { type: String, enum: ['sde', 'hr', 'pm', 'ml_intern', 'sde_intern'], required: true },
   roomId: { type: String, required: true },
   messages: [MessageSchema],
   tasksCompleted: [String],
