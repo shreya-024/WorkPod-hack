@@ -294,105 +294,43 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Right 45% — fake UI card */}
-        <div style={{ flex: '0 0 45%', animation: 'fadeIn 0.6s 300ms both' }}>
+        {/* Right 45% — Hero Illustration */}
+        <div style={{ flex: '0 0 45%', animation: 'fadeIn 0.6s 300ms both', position: 'relative' }}>
           <div style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border)',
-            borderRadius: 12,
+            position: 'relative',
+            borderRadius: 16,
             overflow: 'hidden',
-            /* light: crisp card shadow; dark: subtler */
-            boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
-          }}>
-            {/* Fake title bar */}
+            border: '1px solid var(--border)',
+            boxShadow: 'var(--shadow-lg)',
+            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            aspectRatio: '3 / 2',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.transform = 'translateY(-6px)';
+            e.currentTarget.style.boxShadow = '0 20px 40px rgba(196,131,74,0.15), var(--shadow-lg)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+          }}
+          >
+            <img 
+              src="/hero-illustration.png" 
+              alt="Human collaborating with AI teammate" 
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'block',
+                objectFit: 'cover',
+              }}
+            />
+            {/* Subtle overlay gradient to match the warm color scheme */}
             <div style={{
-              background: 'var(--bg-secondary)',
-              borderBottom: '1px solid var(--border)',
-              padding: '10px 16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-            }}>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {['#e05555','#f0a500','#2ecc8a'].map(c => (
-                  <div key={c} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />
-                ))}
-              </div>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontFamily: 'monospace' }}>
-                WorkPod — TechCorp Engineering
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', height: 320 }}>
-                {/* Fake sidebar */}
-              <div style={{
-                width: 140,
-                background: 'var(--bg-secondary)',
-                borderRight: '1px solid var(--border)',
-                padding: '12px 8px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 4,
-              }}>
-                <div style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '4px 8px', marginBottom: 4 }}>Channels</div>
-                {['# team-general', '# standup', '# incidents'].map((ch, i) => (
-                  <div key={ch} style={{
-                    padding: '6px 10px', borderRadius: 4,
-                    background: i === 0 ? '#0a66c2' : 'transparent',
-                    color: i === 0 ? '#ffffff' : 'var(--text-tertiary)',
-                    fontSize: '0.7rem', fontWeight: i === 0 ? 600 : 400,
-                  }}>{ch}</div>
-                ))}
-                <div style={{ height: 1, background: 'var(--border)', margin: '8px 0' }} />
-                <div style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '4px 8px' }}>Team</div>
-                {[['#0a66c2','AK'],['#2ecc8a','SP'],['#f0a500','RM']].map(([c, init]) => (
-                  <div key={init} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px' }}>
-                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: c, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', fontWeight: 700, color: '#fff' }}>{init}</div>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#2ecc8a' }} />
-                  </div>
-                ))}
-              </div>
-
-              {/* Fake chat */}
-              <div style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden' }}>
-                {/* AI message */}
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#0a66c2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', fontWeight: 700, color: '#fff', flexShrink: 0 }}>AK</div>
-                  <div>
-                    <div style={{ fontSize: '0.65rem', color: '#0a66c2', fontWeight: 700, marginBottom: 3 }}>Anjali Kumar <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>Tech Lead</span></div>
-                    <div style={{ background: 'var(--ai-bubble, #f3f2f1)', borderRadius: '0 8px 8px 8px', padding: '7px 10px', fontSize: '0.72rem', color: 'var(--text-secondary)', maxWidth: 240 }}>
-                      Hey! The auth service is throwing 500s in prod. Can you check the logs?
-                    </div>
-                  </div>
-                </div>
-
-                {/* User message */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <div style={{ background: 'var(--user-bubble, #e8f0fb)', borderRadius: '8px 8px 0 8px', padding: '7px 10px', fontSize: '0.72rem', color: 'var(--text-primary)', maxWidth: 200 }}>
-                    On it — checking CloudWatch now
-                  </div>
-                </div>
-
-                {/* AI message 2 */}
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#2ecc8a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', fontWeight: 700, color: '#fff', flexShrink: 0 }}>SP</div>
-                  <div>
-                    <div style={{ fontSize: '0.65rem', color: '#2ecc8a', fontWeight: 700, marginBottom: 3 }}>Sam Park <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>Backend</span></div>
-                    <div style={{ background: 'var(--ai-bubble, #f3f2f1)', borderRadius: '0 8px 8px 8px', padding: '7px 10px', fontSize: '0.72rem', color: 'var(--text-secondary)', maxWidth: 240 }}>
-                      I see the JWT validation middleware failing. PR #142 might have introduced a regression.
-                    </div>
-                  </div>
-                </div>
-
-                {/* Typing */}
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#0a66c2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', fontWeight: 700, color: '#fff', flexShrink: 0 }}>AK</div>
-                  <div style={{ display: 'flex', gap: 3, background: 'var(--ai-bubble, #f3f2f1)', borderRadius: '0 8px 8px 8px', padding: '10px 12px' }}>
-                    {[0,1,2].map(i => <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--text-tertiary)', animation: `bounce-dots 1.4s ${i*0.16}s infinite` }} />)}
-                  </div>
-                </div>
-              </div>
-            </div>
+              position: 'absolute',
+              top: 0, left: 0, right: 0, bottom: 0,
+              background: 'linear-gradient(to bottom, transparent 60%, rgba(24,21,16,0.35))',
+              pointerEvents: 'none'
+            }} />
           </div>
         </div>
       </section>
