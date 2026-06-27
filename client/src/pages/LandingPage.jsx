@@ -154,8 +154,8 @@ export default function LandingPage() {
         gap: 64,
         width: '100%',
       }}>
-        {/* Left 55% */}
-        <div style={{ flex: '0 0 55%' }}>
+        {/* Left 50% */}
+        <div style={{ flex: '0 0 50%' }}>
           {isLoggedIn ? (
             <>
               <div className="animate-fadeIn" style={{
@@ -294,8 +294,8 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Right 45% — Hero Illustration */}
-        <div style={{ flex: '0 0 45%', animation: 'fadeIn 0.6s 300ms both', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* Right 50% — Hero Illustration */}
+        <div style={{ flex: '0 0 50%', animation: 'fadeIn 0.6s 300ms both', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <img 
             src="/hero-illustration.png" 
             alt="Human collaborating with AI teammate" 
