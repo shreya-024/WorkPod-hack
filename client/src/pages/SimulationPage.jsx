@@ -136,10 +136,12 @@ export default function SimulationPage() {
   };
 
   const handleTaskSubmit = ({ role, taskId, content }) => {
-    const { toggleTask, addMessage } = useSimStore.getState();
+    const { toggleTask } = useSimStore.getState();
     toggleTask(taskId);
-    const preview = content.slice(0, 200).replace(/\n/g, ' ');
-    const autoMessage = `I've completed this task — here's my work: ${preview}...`;
+    // Find the task title for a clean notification message
+    const task = scenario?.tasks?.find(t => t.id === taskId);
+    const taskTitle = task?.title || 'a task';
+    const autoMessage = `I've just submitted my work for "${taskTitle}". Please review when you get a chance!`;
     sendMessage(autoMessage, 'team');
     setSelectedTask(null);
   };
@@ -247,21 +249,31 @@ export default function SimulationPage() {
 
                 <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
                   <ChatWindow
-                    messages={messages.filter(m =>
-                      chatChannel === 'mentor'
-                        ? (m.senderType === 'mentor' || m.senderType === 'user' || m.senderType === 'system')
-                        : (m.senderType !== 'mentor' || m.senderType === 'system')
-                    )}
+                    messages={messages.filter(m => {
+                      if (m.senderType === 'system') return true; // system msgs show everywhere
+                      if (chatChannel === 'mentor') {
+                        // mentor tab: only mentor replies and the user messages sent to mentor
+                        return m.senderType === 'mentor' || (m.senderType === 'user' && m.channel === 'mentor');
+                      } else {
+                        // team tab: only ai + user messages that belong to team channel
+                        return m.senderType === 'ai' || (m.senderType === 'user' && m.channel !== 'mentor');
+                      }
+                    })}
                     scenario={scenario}
                     onQuickSend={handleQuickSend}
                   />
                 </div>
               </div>
 
-              {/* Typing indicator */}
-              {aiTyping && (
+              {/* Typing indicator — only show in the channel that is actively typing */}
+              {aiTyping && aiTyping === chatChannel && (
                 <div style={{ padding: '6px 20px', flexShrink: 0 }}>
-                  <TypingIndicator members={scenario.members} />
+                  <TypingIndicator
+                    members={chatChannel === 'mentor'
+                      ? [{ name: scenario.mentorName || 'Team Lead', color: '#0a66c2' }]
+                      : scenario.members
+                    }
+                  />
                 </div>
               )}
 

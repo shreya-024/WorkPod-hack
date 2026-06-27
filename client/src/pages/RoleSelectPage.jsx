@@ -174,26 +174,7 @@ export default function RoleSelectPage() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)', position: 'relative' }}>
       <div className="bg-grid-pattern" />
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1 }}>
-      <Navbar
-        showAuth={false}
-        rightContent={
-          user ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{
-                width: 30, height: 30, borderRadius: '50%',
-                background: 'var(--accent)', color: '#fff',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '0.65rem', fontWeight: 700,
-              }}>
-                {user.name?.slice(0, 2).toUpperCase()}
-              </div>
-              <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{user.name}</span>
-            </div>
-          ) : (
-            <span className="badge badge-primary">Guest</span>
-          )
-        }
-      />
+      <Navbar showAuth={true} />
 
       <main style={{
         flex: 1, display: 'flex', flexDirection: 'column',

@@ -9,7 +9,9 @@ An AI-powered workplace simulation platform. Practice real job scenarios with AI
 - **5 Roles** — Software Engineer, HR Manager, Product Manager, SDE Intern, ML Intern
 - **AI Teammates** — Groq-powered personas (`llama-3.3-70b-versatile`) orchestrated via CascadeFlow that stay fully in character
 - **Hindsight Long-Term Memory** — Remembers past user struggles, session scores, and feedback per user/role combination to personalize mentor guidance over time
-- **Leaderboard & Rankings** — Aggregates historical performance metrics across users with role-based filtering and percentile tracking
+- **Progress Dashboard** — Personal analytics view with SVG line charts tracking Overall Score, Communication, Task Management, and Pressure Handling trends across all sessions
+- **Portfolio** — Role-based performance cards with skill-bar breakdowns and a scrollable session timeline showing your full WorkPod journey
+- **Leaderboard & Rankings** — Global top-performers table with 1st/2nd/3rd place podium, role-based filtering, personal rank badge, and percentile display
 - **Multiplayer** — join a room with real humans + AI, or go solo with all AI
 - **Collaborative Whiteboard** — Excalidraw-based real-time synchronized canvas for visual collaboration
 - **Team Meetings** — seamlessly embedded Jitsi video/audio conference rooms inside the simulation
@@ -130,6 +132,25 @@ When the session ends (via manual submit or timeout), Groq reviews the full sess
 
 > **Hindsight Retention**: Immediately following database persistence, a non-blocking task retains the session summary into Hindsight memory (`workpod_<userId>_<role>`), making your historical strengths and weaknesses available for recall in future sessions.
 
+### 4. Progress Dashboard (`/dashboard`)
+A personal analytics hub showing how your skills evolve over time:
+- **4 Stat Cards** — total sessions, average score, personal best, and distinct roles practiced
+- **Trend Indicator** — green/red badge comparing your last session score to the previous one
+- **4 SVG Line Charts** — one each for Overall Score, Communication, Task Management, and Pressure Handling, rendered with animated fill areas and per-session data points
+- **Session History Table** — chronological list of every past session with role label, date, and color-coded score (green ≥ 75, yellow ≥ 50, red < 50)
+
+### 5. Portfolio (`/portfolio`)
+A snapshot of your skills grouped by role:
+- **Role Cards** — for each role you've practiced, shows average score, session count, and individual skill-bar breakdowns (Communication, Task Management, Pressure Handling)
+- **Session Timeline** — the 10 most recent sessions shown as a vertical timeline with colored dots indicating performance level
+
+### 6. Leaderboard (`/leaderboard`)
+Competitive global rankings across all WorkPod users:
+- **Podium** — top 3 users displayed side-by-side with 1st / 2nd / 3rd Place medals and average scores
+- **Full Rankings Table** — scrollable list with rank, name, session count, personal best, and average score; your own row is highlighted with an accent border and a "YOU" tag
+- **Role Filter** — instantly filter the entire board by All Roles, SDE, PM, HR, ML Intern, or SDE Intern
+- **Your Rank Card** — logged-in users see their current rank, percentile, and session count pinned above the table
+
 ---
 
 ## Multiplayer
@@ -173,7 +194,10 @@ WorkPod/
 │       │   ├── LandingPage.jsx
 │       │   ├── RoleSelectPage.jsx   # Team selection modal + live human query
 │       │   ├── SimulationPage.jsx   # Main sim UI (coordinates Chat, Whiteboard, Meetings)
-│       │   └── ReportPage.jsx       # Animated performance score report
+│       │   ├── ReportPage.jsx       # Animated performance score report
+│       │   ├── DashboardPage.jsx    # Progress analytics: stat cards + SVG trend charts
+│       │   ├── PortfolioPage.jsx    # Role-based skill cards + session timeline
+│       │   └── LeaderboardPage.jsx  # Global rankings: podium, filters, and personal rank
 │       ├── components/
 │       │   ├── Navbar.jsx              # Top navigation bar (auth, guest, links)
 │       │   ├── TeamSelectionModal.jsx  # Choose AI-only or join humans

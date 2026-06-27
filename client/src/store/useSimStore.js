@@ -112,6 +112,7 @@ export const useSimStore = create((set, get) => ({
   setEmergencyActive: (val) => set({ isEmergencyActive: val }),
 
   // ── AI Typing ─────────────────────────────────────────────
+  // Value is the channel currently typing ('team' | 'mentor'), or false when idle
   aiTyping: false,
   setAiTyping: (val) => set({ aiTyping: val }),
 

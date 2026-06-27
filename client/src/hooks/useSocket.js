@@ -88,8 +88,9 @@ export function useSocket() {
       addMessage({ sender: 'System', senderType: 'system', content, timestamp });
     });
 
-    socket.on('ai-typing', ({ typing }) => {
-      setAiTyping(typing);
+    socket.on('ai-typing', ({ typing, channel }) => {
+      // Store the channel string when typing, false when idle
+      setAiTyping(typing ? (channel || 'team') : false);
     });
 
     socket.on('emergency-trigger', ({ label }) => {

@@ -39,13 +39,13 @@ export default function SimTopBar({
   const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
   const secs = String(timerSeconds % 60).padStart(2, '0');
   const timerCritical = timerSeconds < 300;   // < 5 min
-  const timerWarn     = timerSeconds < 900;   // < 15 min
+  const timerWarn = timerSeconds < 900;   // < 15 min
 
   const timerColor = timerCritical
     ? 'var(--danger)'
     : timerWarn
-    ? 'var(--warning)'
-    : 'var(--text-secondary)';
+      ? 'var(--warning)'
+      : 'var(--text-secondary)';
 
   const othersCount = roomParticipants.length > 1 ? roomParticipants.length - 1 : 0;
 

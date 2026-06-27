@@ -174,28 +174,34 @@ function InlineMarkdown({ text }) {
 }
 
 // ── Parse multi-speaker AI messages ───────────────────────────────
-// Handles messages like:  **[Priya]**: some text\n**[Alex]**: more text
+// Handles both:
+//   **[Priya]**: some text   (bracket format)
+//   **Priya**: some text     (no-bracket format, what LLMs often output)
 function parseAiMessage(content) {
-  const regex = /\*\*\[([^\]]+)\]\*\*:\s*/g;
+  // Matches **[Name]**: or **Name**: at the start of a speaker turn
+  const regex = /\*\*\[?([A-Za-z][^*\]\n]{1,40}?)\]?\*\*:\s*/g;
   const parts = [];
   let lastIndex = 0;
   let match;
 
   while ((match = regex.exec(content)) !== null) {
-    // Any text before this speaker tag belongs to previous (unnamed) segment
+    // Any text before this speaker tag belongs to a previous (unnamed) segment
     if (match.index > lastIndex) {
       const text = content.slice(lastIndex, match.index).trim();
       if (text) parts.push({ name: null, text });
     }
     // Find where this speaker's text ends (at next tag, or end of string)
     const textStart = match.index + match[0].length;
-    const nextMatch = /\*\*\[([^\]]+)\]\*\*:\s*/.exec(content.slice(textStart));
+    // Re-run regex from textStart to find the next speaker tag
+    const nextTagRegex = /\*\*\[?([A-Za-z][^*\]\n]{1,40}?)\]?\*\*:\s*/g;
+    nextTagRegex.lastIndex = 0;
+    const remaining = content.slice(textStart);
+    const nextMatch = nextTagRegex.exec(remaining);
     const textEnd = nextMatch ? textStart + nextMatch.index : content.length;
     const text = content.slice(textStart, textEnd).trim();
 
-    parts.push({ name: match[1], text });
+    parts.push({ name: match[1].trim(), text });
     lastIndex = textEnd;
-    // Advance regex past the text we already consumed
     regex.lastIndex = textEnd;
   }
 
@@ -317,12 +323,15 @@ export default function MessageBubble({ msg, memberMap, prevMsg }) {
         {parts.map((part, i) => {
           if (!part.text) return null;
           const member = part.name ? memberMap?.[part.name] : null;
-          const color = member?.color || getColorFromName(part.name || 'AI');
-          const initials = part.name
-            ? part.name.split(' ').map(n => n[0]).join('').toUpperCase()
+          // Use parsed name → member color → hash color; fall back to msg.sender for display
+          const displayName = part.name || msg.sender || 'AI';
+          const color = member?.color || getColorFromName(displayName);
+          const initials = displayName
+            ? displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
             : 'AI';
 
-          const showHeader = !sameSource || i > 0;
+          // Named speakers always get their own header; only suppress for unnamed consecutive chunks
+          const showHeader = part.name ? true : (!sameSource || i > 0);
 
           return (
             <div key={i} style={{
@@ -343,7 +352,7 @@ export default function MessageBubble({ msg, memberMap, prevMsg }) {
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}>
                     <span style={{ fontSize: '14px', fontWeight: 700, color }}>
-                      {part.name || 'AI Teammate'}
+                      {displayName}
                     </span>
                     {member?.role && (
                       <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 400 }}>
