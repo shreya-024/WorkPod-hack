@@ -5,6 +5,9 @@ import RoleSelectPage from './pages/RoleSelectPage.jsx';
 import SimulationPage from './pages/SimulationPage.jsx';
 import ReportPage from './pages/ReportPage.jsx';
 import { useSimStore } from './store/useSimStore.js';
+import DashboardPage from './pages/DashboardPage.jsx';
+import PortfolioPage from './pages/PortfolioPage.jsx';
+import LeaderboardPage from './pages/LeaderboardPage.jsx';
 
 function ProtectedSim() {
   const role = useSimStore(s => s.role);
@@ -28,12 +31,14 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/"       element={<LandingPage />} />
-        <Route path="/select" element={<RoleSelectPage />} />
-        <Route path="/sim"    element={<ProtectedSim />} />
-        <Route path="/report" element={<ProtectedReport />} />
-        <Route path="*"       element={<Navigate to="/" replace />} />
+        <Route path="/"            element={<LandingPage />} />
+        <Route path="/select"      element={<RoleSelectPage />} />
+        <Route path="/sim"         element={<ProtectedSim />} />
+        <Route path="/report"      element={<ProtectedReport />} />
+        <Route path="/dashboard"   element={<DashboardPage />} />
+        <Route path="/portfolio"   element={<PortfolioPage />} />
+        <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="*"            element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
-}
