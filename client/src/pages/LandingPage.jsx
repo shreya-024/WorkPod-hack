@@ -111,6 +111,9 @@ export default function LandingPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const isLoggedIn = !!localStorage.getItem('wpod_userId');
+  const userName = localStorage.getItem('wpod_name') || 'User';
+
   const handleGuest = () => navigate('/select');
 
   const handleAuth = async (e) => {
@@ -125,7 +128,8 @@ export default function LandingPage() {
       const { data } = await api.post(endpoint, payload);
       setUser(data.user, data.token);
       setModal(null);
-      navigate('/select');
+      // Stay on landing page, let them choose what to do!
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Something went wrong');
     } finally {
@@ -152,61 +156,123 @@ export default function LandingPage() {
       }}>
         {/* Left 55% */}
         <div style={{ flex: '0 0 55%' }}>
-          <div className="animate-fadeIn" style={{
-            display: 'inline-block',
-            fontSize: '0.72rem',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.12em',
-            color: 'var(--accent)',
-            marginBottom: 20,
-            padding: '4px 0',
-          }}>
-            AI-Powered Work Simulation
-          </div>
+          {isLoggedIn ? (
+            <>
+              <div className="animate-fadeIn" style={{
+                display: 'inline-block',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.12em',
+                color: 'var(--accent)',
+                marginBottom: 20,
+                padding: '4px 0',
+              }}>
+                Welcome Back, {userName}!
+              </div>
 
-          <h1 className="font-display animate-fadeIn" style={{
-            fontSize: 'clamp(2rem, 4vw, 3rem)',
-            fontWeight: 700,
-            lineHeight: 1.1,
-            letterSpacing: '-0.025em',
-            color: 'var(--text-primary)',
-            marginBottom: 24,
-            animationDelay: '60ms',
-          }}>
-            Experience your first<br />day at work —<br />
-            <span style={{ color: '#0a66c2' }}>before it happens</span>
-          </h1>
+              <h1 className="font-display animate-fadeIn" style={{
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                fontWeight: 700,
+                lineHeight: 1.1,
+                letterSpacing: '-0.025em',
+                color: 'var(--text-primary)',
+                marginBottom: 24,
+                animationDelay: '60ms',
+              }}>
+                Ready for your next<br />simulation sprint?<br />
+                <span style={{ color: 'var(--accent)' }}>Practice makes perfect.</span>
+              </h1>
 
-          <p style={{
-            fontSize: '1.1rem',
-            color: 'var(--text-secondary)',
-            lineHeight: 1.75,
-            maxWidth: 520,
-            marginBottom: 36,
-            animation: 'fadeIn 0.5s 120ms both',
-          }}>
-            Step into real workplace scenarios with AI teammates. Complete tasks, handle pressure, and get a performance report — all before your first real job.
-          </p>
+              <p style={{
+                fontSize: '1.1rem',
+                color: 'var(--text-secondary)',
+                lineHeight: 1.75,
+                maxWidth: 520,
+                marginBottom: 36,
+                animation: 'fadeIn 0.5s 120ms both',
+              }}>
+                Step back into real workplace scenarios. Continue building your portfolio, track your performance metrics, or challenge yourself with a new role.
+              </p>
 
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 40, animation: 'fadeIn 0.5s 180ms both' }}>
-            <button
-              className="btn btn-accent btn-lg"
-              id="landing-start-btn"
-              onClick={handleGuest}
-              style={{ minWidth: 180 }}
-            >
-              Start Simulation
-            </button>
-            <button
-              className="btn btn-ghost btn-lg"
-              id="landing-howitworks-btn"
-              onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-              style={{ minWidth: 180 }}
-            >
-              See how it works
-            </button>
-          </div>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 40, animation: 'fadeIn 0.5s 180ms both' }}>
+                <button
+                  className="btn btn-accent btn-lg"
+                  id="landing-start-btn"
+                  onClick={() => navigate('/select')}
+                  style={{ minWidth: 180 }}
+                >
+                  Start Simulation
+                </button>
+                <button
+                  className="btn btn-ghost btn-lg"
+                  id="landing-profile-btn"
+                  onClick={() => navigate('/portfolio')}
+                  style={{ minWidth: 180 }}
+                >
+                  Visit My Profile
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="animate-fadeIn" style={{
+                display: 'inline-block',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.12em',
+                color: 'var(--accent)',
+                marginBottom: 20,
+                padding: '4px 0',
+              }}>
+                AI-Powered Work Simulation
+              </div>
+
+              <h1 className="font-display animate-fadeIn" style={{
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                fontWeight: 700,
+                lineHeight: 1.1,
+                letterSpacing: '-0.025em',
+                color: 'var(--text-primary)',
+                marginBottom: 24,
+                animationDelay: '60ms',
+              }}>
+                Experience your first<br />day at work —<br />
+                <span style={{ color: 'var(--accent)' }}>before it happens</span>
+              </h1>
+
+              <p style={{
+                fontSize: '1.1rem',
+                color: 'var(--text-secondary)',
+                lineHeight: 1.75,
+                maxWidth: 520,
+                marginBottom: 36,
+                animation: 'fadeIn 0.5s 120ms both',
+              }}>
+                Step into real workplace scenarios with AI teammates. Complete tasks, handle pressure, and get a performance report — all before your first real job.
+              </p>
+
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 40, animation: 'fadeIn 0.5s 180ms both' }}>
+                <button
+                  className="btn btn-accent btn-lg"
+                  id="landing-start-btn"
+                  onClick={handleGuest}
+                  style={{ minWidth: 180 }}
+                >
+                  Start Simulation
+                </button>
+                <button
+                  className="btn btn-ghost btn-lg"
+                  id="landing-howitworks-btn"
+                  onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+                  style={{ minWidth: 180 }}
+                >
+                  See how it works
+                </button>
+              </div>
+            </>
+          )}
 
           {/* Trust stats — 13px, text-secondary color, no icon accent */}
           <div style={{

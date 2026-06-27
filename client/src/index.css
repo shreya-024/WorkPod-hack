@@ -1,117 +1,119 @@
 /* ============================================================
-   WorkPod Design System v3 — LinkedIn Blue + Teams density
+   WorkPod Design System v4 — Warm Neutral / Amber
    ============================================================ */
 
 /* ── Google Fonts ────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap');
 
-/* ── Dark Theme (default) ───────────────────────────────── */
+/* ── Dark Theme (default) — warm deep browns ────────────── */
 :root,
 html[data-theme="dark"] {
-  --bg-primary:    #0a0a0f;
-  --bg-secondary:  #111118;
-  --bg-tertiary:   #1a1a24;
-  --bg-card:       #16161f;
-  --border:        rgba(255,255,255,0.08);
-  --border-hover:  rgba(255,255,255,0.15);
-  --text-primary:  #f0f0f5;
-  --text-secondary:#9090a8;
-  --text-tertiary: #606078;
-  --accent:        #0a66c2;
-  --accent-hover:  #0d7de0;
-  --accent-muted:  rgba(10,102,194,0.14);
-  --success:       #2ecc8a;
-  --warning:       #f0a500;
-  --danger:        #e05555;
+  --bg-primary:    #111009;
+  --bg-secondary:  #181510;
+  --bg-tertiary:   #221D15;
+  --bg-card:       #1C1812;
+  --border:        rgba(255,200,140,0.09);
+  --border-hover:  rgba(255,200,140,0.18);
+  --text-primary:  #F2E8D8;
+  --text-secondary:#A09080;
+  --text-tertiary: #6E5E4E;
+  --accent:        #C4834A;
+  --accent-hover:  #D4935A;
+  --accent-muted:  rgba(196,131,74,0.16);
+  --success:       #5BAE7A;
+  --warning:       #D4A040;
+  --danger:        #C46056;
 
-  /* Sidebar — Teams dark */
-  --sidebar-bg:          #2b2d31;
-  --sidebar-text:        #dcddde;
-  --sidebar-text-active: #ffffff;
-  --channel-active-bg:   rgba(255,255,255,0.10);
-  --channel-hover-bg:    rgba(255,255,255,0.06);
+  /* Sidebar — warm dark */
+  --sidebar-bg:          #201B14;
+  --sidebar-text:        #C8B898;
+  --sidebar-text-active: #F2E8D8;
+  --channel-active-bg:   rgba(196,131,74,0.18);
+  --channel-hover-bg:    rgba(196,131,74,0.08);
 
   /* Chat area */
-  --chat-bg:     #313338;
-  --input-bg:    #383a40;
-  --input-border:#555;
+  --chat-bg:     #2A241C;
+  --input-bg:    #342D24;
+  --input-border:#5A4A38;
 
   /* Bubble overrides */
-  --user-bubble:  #3d3b72;
+  --ai-bubble:   #2E2820;
+  --user-bubble: #3D3460;
 
   /* Legacy aliases */
-  --surface-base:   #0a0a0f;
-  --surface-raised: #111118;
-  --surface-card:   #16161f;
-  --surface-hover:  #1a1a24;
-  --surface-border: rgba(255,255,255,0.08);
-  --surface-input:  #111118;
-  --brand-primary:        #0a66c2;
-  --brand-primary-light:  #0d7de0;
-  --brand-primary-dark:   #0850a0;
-  --brand-accent:         #2ecc8a;
-  --brand-warning:        #f0a500;
-  --brand-danger:         #e05555;
-  --brand-danger-dark:    #c03333;
-  --text-muted:           #606078;
-  --text-inverse:         #0a0a0f;
-  --shadow-sm:  0 1px 3px rgba(0,0,0,0.4);
-  --shadow-md:  0 4px 12px rgba(0,0,0,0.5);
-  --shadow-lg:  0 8px 24px rgba(0,0,0,0.6);
+  --surface-base:   #111009;
+  --surface-raised: #181510;
+  --surface-card:   #1C1812;
+  --surface-hover:  #221D15;
+  --surface-border: rgba(255,200,140,0.09);
+  --surface-input:  #181510;
+  --brand-primary:        #C4834A;
+  --brand-primary-light:  #D4935A;
+  --brand-primary-dark:   #A86A32;
+  --brand-accent:         #5BAE7A;
+  --brand-warning:        #D4A040;
+  --brand-danger:         #C46056;
+  --brand-danger-dark:    #A04040;
+  --text-muted:           #6E5E4E;
+  --text-inverse:         #111009;
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.5);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.6);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,0.7);
 }
 
-/* ── Light Theme — pure white, LinkedIn Learning feel ───── */
+/* ── Light Theme — warm cream / parchment ───────────────── */
 html[data-theme="light"] {
-  --bg-primary:    #ffffff;
-  --bg-secondary:  #f3f2f1;
-  --bg-tertiary:   #edebe9;
-  --bg-card:       #ffffff;
-  --border:        rgba(0,0,0,0.10);
-  --border-hover:  rgba(0,0,0,0.20);
-  --text-primary:  #1c1c1c;
-  --text-secondary:#444444;
-  --text-tertiary: #666666;
-  --accent:        #0a66c2;
-  --accent-hover:  #0850a0;
-  --accent-muted:  rgba(10,102,194,0.10);
-  --success:       #057642;
-  --warning:       #b07800;
-  --danger:        #cc1016;
+  --bg-primary:    #FAF5EE;
+  --bg-secondary:  #F2E8DC;
+  --bg-tertiary:   #EBE0CE;
+  --bg-card:       #FFFFFF;
+  --border:        rgba(120,80,40,0.12);
+  --border-hover:  rgba(120,80,40,0.25);
+  --text-primary:  #2A1C0E;
+  --text-secondary:#6B5040;
+  --text-tertiary: #8C7260;
+  --accent:        #A86A32;
+  --accent-hover:  #8C5A28;
+  --accent-muted:  rgba(168,106,50,0.12);
+  --success:       #2E7D50;
+  --warning:       #8C6800;
+  --danger:        #A83030;
 
-  /* Sidebar — Teams light */
-  --sidebar-bg:          #f3f2f1;
-  --sidebar-text:        #242424;
-  --sidebar-text-active: #1c1c1c;
-  --channel-active-bg:   rgba(0,0,0,0.06);
-  --channel-hover-bg:    rgba(0,0,0,0.04);
+  /* Sidebar — warm parchment */
+  --sidebar-bg:          #F2E8DC;
+  --sidebar-text:        #4A3424;
+  --sidebar-text-active: #2A1C0E;
+  --channel-active-bg:   rgba(168,106,50,0.12);
+  --channel-hover-bg:    rgba(168,106,50,0.06);
 
   /* Chat area */
-  --chat-bg:     #ffffff;
-  --input-bg:    #ffffff;
-  --input-border:#ccc;
+  --chat-bg:     #FAF5EE;
+  --input-bg:    #FFFFFF;
+  --input-border:#C8A888;
 
   /* Bubble overrides */
-  --user-bubble:  #e8e0f7;
+  --ai-bubble:   #EFE8DC;
+  --user-bubble: #E4DCF0;
 
   /* Legacy aliases */
-  --surface-base:   #ffffff;
-  --surface-raised: #f3f2f1;
-  --surface-card:   #ffffff;
-  --surface-hover:  #edebe9;
-  --surface-border: rgba(0,0,0,0.10);
-  --surface-input:  #ffffff;
-  --brand-primary:        #0a66c2;
-  --brand-primary-light:  #0d7de0;
-  --brand-primary-dark:   #0850a0;
-  --brand-accent:         #057642;
-  --brand-warning:        #b07800;
-  --brand-danger:         #cc1016;
-  --brand-danger-dark:    #990c10;
-  --text-muted:           #666666;
-  --text-inverse:         #ffffff;
-  --shadow-sm:  0 1px 3px rgba(0,0,0,0.08);
-  --shadow-md:  0 4px 12px rgba(0,0,0,0.10);
-  --shadow-lg:  0 8px 24px rgba(0,0,0,0.12);
+  --surface-base:   #FAF5EE;
+  --surface-raised: #F2E8DC;
+  --surface-card:   #FFFFFF;
+  --surface-hover:  #EBE0CE;
+  --surface-border: rgba(120,80,40,0.12);
+  --surface-input:  #FFFFFF;
+  --brand-primary:        #A86A32;
+  --brand-primary-light:  #C4834A;
+  --brand-primary-dark:   #8C5A28;
+  --brand-accent:         #2E7D50;
+  --brand-warning:        #8C6800;
+  --brand-danger:         #A83030;
+  --brand-danger-dark:    #802020;
+  --text-muted:           #8C7260;
+  --text-inverse:         #FFFFFF;
+  --shadow-sm:  0 1px 3px rgba(80,40,10,0.08);
+  --shadow-md:  0 4px 12px rgba(80,40,10,0.12);
+  --shadow-lg:  0 8px 24px rgba(80,40,10,0.16);
 }
 
 /* ── Spacing tokens ─────────────────────────────────────── */

@@ -19,10 +19,14 @@ export const useSimStore = create((set, get) => ({
 
   setUser: (user, token) => {
     localStorage.setItem('wpod_token', token);
+    localStorage.setItem('wpod_userId', user.id);
+    localStorage.setItem('wpod_name', user.name);
     set({ user, token });
   },
   logout: () => {
     localStorage.removeItem('wpod_token');
+    localStorage.removeItem('wpod_userId');
+    localStorage.removeItem('wpod_name');
     set({ user: null, token: null });
   },
 
