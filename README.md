@@ -1,23 +1,25 @@
 # WorkPod
 
-An AI-powered workplace simulation platform. Practice real job scenarios with AI teammates, handle live emergencies, collaborate with other humans in multiplayer, and get a scored performance report powered by Gemini.
+An AI-powered workplace simulation platform. Practice real job scenarios with AI teammates, handle live emergencies, collaborate with other humans in multiplayer, and get a scored performance report powered by Groq (Llama 3.3) & Hindsight Long-Term Memory.
 
 ---
 
 ## Features
 
 - **5 Roles** — Software Engineer, HR Manager, Product Manager, SDE Intern, ML Intern
-- **AI Teammates** — Gemini-powered personas that stay fully in character
+- **AI Teammates** — Groq-powered personas (`llama-3.3-70b-versatile`) orchestrated via CascadeFlow that stay fully in character
+- **Hindsight Long-Term Memory** — Remembers past user struggles, session scores, and feedback per user/role combination to personalize mentor guidance over time
+- **Leaderboard & Rankings** — Aggregates historical performance metrics across users with role-based filtering and percentile tracking
 - **Multiplayer** — join a room with real humans + AI, or go solo with all AI
 - **Collaborative Whiteboard** — Excalidraw-based real-time synchronized canvas for visual collaboration
 - **Team Meetings** — seamlessly embedded Jitsi video/audio conference rooms inside the simulation
 - **Teams-Style Sidebar** — unified navigation in `ChatSidebar.jsx` showing channels, team statuses, active humans, tasks checklist, and live progress
 - **Task Artifacts** — write and submit deliverables (PRD, code review, etc.) via embedded Monaco Editor
 - **Emergency Scenarios** — triggered at 60% session time, requiring urgent team response (with a dedicated `EmergencyBanner` notification)
-- **Mentor Channel** — separate private channel with custom career-coaching prompts to ask your AI mentor questions
+- **Mentor Channel** — separate private channel backed by Hindsight memory recall to offer contextual career coaching based on your historical journey
 - **Voice Input** — speak your messages using Chrome Web Speech API
 - **Theme Toggle** — switch between dark and light modes mid-session
-- **AI Performance Report** — evaluated on Communication, Task Management & Pressure Handling
+- **AI Performance Report** — evaluated on Communication, Task Management & Pressure Handling with non-blocking memory retention
 - **30-Day Learning Roadmap** — personalized, high-quality resource links generated after each session
 - **Guest + Auth** — play instantly as a guest, or sign in to save simulation history
 - **Premium SaaS UI** — sleek dark theme, animated gradient typography, and glowing hover states across the application
@@ -45,20 +47,24 @@ MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=any_random_secret_string
 CLIENT_URL=http://localhost:5173
 
-# Gemini model (optional — defaults to gemini-2.5-flash)
-GEMINI_MODEL=gemini-2.5-flash
+# LLM Model (optional — defaults to llama-3.3-70b-versatile)
+LLM_MODEL=llama-3.3-70b-versatile
 
-# Gemini API keys — supply one or many for round-robin rotation & quota failover
-GEMINI_KEY=your_primary_gemini_api_key
-GEMINI_KEY_1=
-GEMINI_KEY_2=
-GEMINI_KEY_3=
-gemini_key_4=
-geminikey5=
-gemini_key_6=
+# Groq API keys — supply one or many for round-robin rotation & quota failover
+GROQ_API_KEY=your_primary_groq_api_key
+GROQ_API_KEY_1=
+GROQ_API_KEY_2=
+GROQ_API_KEY_3=
+GROQ_API_KEY_4=
+GROQ_API_KEY_5=
+GROQ_API_KEY_6=
+
+# Hindsight Memory API (Vectorize.io Cloud or Local Docker)
+HINDSIGHT_BASE_URL=https://api.vectorize.io/hindsight
+HINDSIGHT_API_KEY=your_hindsight_api_key
 ```
 
-> The server reads all numbered key variants in order and rotates through them automatically. Any key that hits a 429 quota error is skipped and the next one is tried. Falls back to `GEMINI_KEY` if no numbered keys are set.
+> The server reads all numbered key variants in order and rotates through them automatically. Any key that hits a 429 quota error is skipped and the next one is tried. Falls back to `GROQ_API_KEY` if no numbered keys are set. All LLM calls are observed via `@cascadeflow/core`.
 
 **Client** — copy `.env.example` → `.env`:
 ```env
@@ -92,7 +98,8 @@ Open `http://localhost:5173`
 | Backend | Node.js + Express |
 | Database | MongoDB + Mongoose |
 | Auth | JWT (bcrypt) + guest mode (localStorage ID) |
-| AI | Gemini 2.5 Flash via `@google/generative-ai` (Chat, Mentor & Evaluation) |
+| AI / LLM | Groq Llama 3.3 70B via `groq-sdk` & `@cascadeflow/core` (Chat, Mentor & Evaluation) |
+| Long-Term Memory | `@vectorize-io/hindsight-client` (Per-user/per-role memory retention & recall) |
 | Voice | Web Speech API (Chrome only) |
 
 ---
@@ -114,12 +121,14 @@ Pick a role (SDE, HR, PM, SDE Intern, ML Intern). A **Team Selection Modal** ope
 - **Active Humans Count** — shown live in the sidebar roster ("In This Room") and top header.
 - **Theme Toggle** — switch between dark and light modes at any point via the top bar.
 
-### 3. Report & Evaluation
-When the session ends (via manual submit or timeout), Gemini reviews the full session transcript and returns:
+### 3. Report & Long-Term Memory Evaluation
+When the session ends (via manual submit or timeout), Groq reviews the full session transcript and returns:
 - **Overall Score** (0–100) with an animated visual gauge
 - **Skill Breakdown** — scored metrics on Communication, Task Management, and Pressure Handling
 - **3 Critical AI Feedback Points** — constructive, highly specific observations of your session
 - **30-Day Learning Roadmap** — 3 curated, actionable external links with custom descriptions on how to improve
+
+> **Hindsight Retention**: Immediately following database persistence, a non-blocking task retains the session summary into Hindsight memory (`workpod_<userId>_<role>`), making your historical strengths and weaknesses available for recall in future sessions.
 
 ---
 
@@ -197,15 +206,21 @@ WorkPod/
     ├── socket/
     │   └── roomManager.js     # All socket logic, multiplayer rooms, Excalidraw synchronization
     ├── services/
-    │   └── geminiService.js   # Generative AI calls: Chat model, career mentor model, evaluation model
+    │   ├── groqService.js     # Groq + CascadeFlow calls: Chat, Mentor, and Evaluation models
+    │   └── hindsightService.js # Hindsight client: long-term retain() and recall() operations
     ├── controllers/
     │   ├── authController.js
-    │   ├── sessionController.js
-    │   └── roomController.js
+    │   ├── sessionController.js # Session evaluation + non-blocking Hindsight memory retain
+    │   ├── roomController.js
+    │   └── leaderboardController.js # Aggregates user scores, percentiles, and best rankings
     ├── middleware/            # Auth middleware (JWT verification)
     ├── config/               # DB connection and config helpers
     ├── models/               # Mongoose schemas: User, Session
     ├── routes/
+    │   ├── authRoutes.js
+    │   ├── sessionRoutes.js
+    │   ├── roomRoutes.js
+    │   └── leaderboardRoutes.js # GET /api/leaderboard and /api/leaderboard/me/:userId
     └── scenarios/            # Server-side scenario JSON files (with specialized mentorPrompts)
 ```
 
@@ -217,29 +232,32 @@ WorkPod/
 |--------|----------|------|-------------|
 | POST | `/api/auth/register` | — | Create account |
 | POST | `/api/auth/login` | — | Login, returns JWT |
-| POST | `/api/session/end` | Optional | Evaluate session, save if logged in |
+| POST | `/api/session/end` | Optional | Evaluate session, save if logged in & retain memory |
 | GET | `/api/session/history/:userId` | JWT | Past sessions |
+| GET | `/api/leaderboard` | — | Get top users (supports `?role=sde&limit=20`) |
+| GET | `/api/leaderboard/me/:userId` | — | Get specific user's rank and percentile |
 | GET | `/api/room/count/:role` | — | Live participant count for a role |
 | GET | `/api/health` | — | Server health check |
 
 ---
 
-## Gemini Integration
+## AI & Memory Architecture (Groq + CascadeFlow + Hindsight)
 
-Three separate model configurations are used:
+Three core sub-systems power the simulation's intelligence:
 
-| Model | `maxOutputTokens` | `temperature` | Used for |
-|-------|-------------------|---------------|----------|
-| Chat model | 300 | 0.85 | Teammate + mentor replies (short, in-character) |
-| Evaluator model | 4096 | 0.40 | End-of-session JSON report (needs full output) |
+### 1. Groq + CascadeFlow Orchestration
+All LLM requests are processed through `@cascadeflow/core` in observe mode with automated key round-robin rotation (`GROQ_API_KEY_1`..`6`).
+- **Teammate Chat & Mentor**: Uses `llama-3.3-70b-versatile` with low latency (`max_tokens: 300`, `temperature: 0.85`) to keep conversations snappy and realistic.
+- **Session Evaluator**: Uses structured JSON output enforcement (`temperature: 0.4`) to extract precise grading metrics and actionable learning roadmaps.
 
-### API Key Rotation
-The server supports up to **6 Gemini API keys** for automatic round-robin rotation and quota failover. Keys are read from `GEMINI_KEY_1` through `gemini_key_6` (mixed casing variants). On a `429` quota error the next key is tried immediately; on a `503` overload error a brief back-off delay is applied before retrying. If no numbered keys are set, `GEMINI_KEY` is used as the single fallback.
+### 2. Hindsight Long-Term Memory
+Powered by `@vectorize-io/hindsight-client`, memory banks are scoped strictly to the user and role (`workpod_<userId>_<role>`).
+- **Retain Phase**: When a simulation ends, `retainSessionMemory()` saves key metadata (scores, completed tasks, emergency handling, and feedback).
+- **Recall Phase**: When interacting with the AI Mentor, `recallMemories()` searches historical sessions and injects context directly into the prompt so the mentor gives tailored advice based on past growth.
 
-### System Guardrails & Prompt Engineering
-- **Unified Workplace Guardrails** — Pre-appended to every chat and mentor prompt to guarantee the AI stays fully in character as a professional teammate. Includes strict defense mechanics that redirect jailbreak attempts or casual chat back to simulation topics.
-- **Custom Career Mentorship Channel** — The mentor channel injects a role-specific system prompt (`mentorPrompt`) loaded dynamically based on the current scenario, blended with career coaching guidelines, keeping it distinct and focused compared to standard teammate chat.
-- **JSON Evaluation Parser** — The evaluator prompt instructs Gemini to return a strict JSON object with `responseMimeType: 'application/json'`. The parser additionally uses `indexOf('{')` and `lastIndexOf('}')` to robustly extract the JSON object, gracefully bypassing any markdown code blocks or extra text added by the model.
+### 3. System Guardrails
+- **Workplace Guardrails** — Pre-appended to every chat interaction to prevent off-topic tangents or jailbreak attempts.
+- **Mentor Context Injection** — Automatically merges recalled historical struggles with scenario career coaching instructions.
 
 ---
 

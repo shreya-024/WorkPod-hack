@@ -85,7 +85,7 @@ const HOW_IT_WORKS = [
   { n: '01', title: 'Pick a role', desc: 'Choose SDE, HR, or PM — each has a unique scenario.' },
   { n: '02', title: 'Work with AI teammates', desc: 'Your AI colleagues brief you, assign tasks, and react to your messages.' },
   { n: '03', title: 'Face unexpected challenges', desc: 'A real emergency scenario triggers mid-simulation. Stay calm.' },
-  { n: '04', title: 'Get your performance report', desc: 'Gemini grades your communication, task handling, and pressure response.' },
+  { n: '04', title: 'Get your performance report', desc: 'AI grades your communication, task handling, and pressure response.' },
 ];
 
 const TESTIMONIALS = [

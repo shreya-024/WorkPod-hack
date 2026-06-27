@@ -7,6 +7,7 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import sessionRoutes from './routes/sessionRoutes.js';
 import roomRoutes from './routes/roomRoutes.js';
+import leaderboardRoutes from './routes/leaderboardRoutes.js';
 import { initRoomManager } from './socket/roomManager.js';
 
 const app = express();
@@ -34,6 +35,7 @@ connectDB();
 app.use('/api/auth', authRoutes);
 app.use('/api/session', sessionRoutes);
 app.use('/api/room', roomRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() }));
 

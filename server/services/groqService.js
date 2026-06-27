@@ -1,10 +1,18 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
+import { cascadeflow } from '@cascadeflow/core';
 
-// gemini-2.0-flash free-tier quota is often 0; 2.5-flash is the current GA free-tier model
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+// ─── CascadeFlow harness ─────────────────────────────────────────────────────
+// Initialise CascadeFlow in observe mode — it auto-detects GROQ_API_KEY from
+// the environment and tracks cost / latency for every LLM call made inside a
+// cascadeflow.run() session.  Switch to "enforce" when ready for active routing.
+cascadeflow.init({ mode: 'observe' });
+console.log('[cascadeflow] Harness initialised in observe mode');
+
+// ─── Model ───────────────────────────────────────────────────────────────────
+const LLM_MODEL = process.env.LLM_MODEL || 'llama-3.3-70b-versatile';
 
 // ─── Guardrails ──────────────────────────────────────────────────────────────
-// Applied to EVERY Gemini call — team chat, mentor channel, and evaluator.
+// Applied to EVERY LLM call — team chat, mentor channel, and evaluator.
 const GUARDRAIL = `
 RULES: You are a real colleague in this workplace — never an AI, never a simulation.
 Only discuss work-related topics: tasks, deadlines, team updates, and project decisions.
@@ -18,23 +26,23 @@ Only answer questions about career growth, role-specific skills, and work within
 If the user asks anything unrelated to their career or current role, respond: "That's outside what I coach on — let's focus on your growth here."`;
 
 // ─── API Key Manager ─────────────────────────────────────────────────────────
-// Reads keys from GEMINI_KEY_1..GEMINI_KEY_6 (mixed casing variants), falls
-// back to the single GEMINI_KEY env var. Round-robins on each request and
-// auto-retries with the next key on 429 / quota errors.
+// Reads keys from GROQ_API_KEY_1..GROQ_API_KEY_6, falls back to the single
+// GROQ_API_KEY env var. Round-robins on each request and auto-retries with the
+// next key on 429 / quota errors.
 
 class KeyManager {
   constructor() {
     /** @type {string[]} */
     this.keys = [];
 
-    // Collect keys from the env var naming variants specified in the requirements
+    // Collect keys from numbered env vars
     const envNames = [
-      'GEMINI_KEY_1',
-      'GEMINI_KEY_2',
-      'GEMINI_KEY_3',
-      'gemini_key_4',
-      'geminikey5',
-      'gemini_key_6',
+      'GROQ_API_KEY_1',
+      'GROQ_API_KEY_2',
+      'GROQ_API_KEY_3',
+      'GROQ_API_KEY_4',
+      'GROQ_API_KEY_5',
+      'GROQ_API_KEY_6',
     ];
 
     for (const name of envNames) {
@@ -44,18 +52,18 @@ class KeyManager {
       }
     }
 
-    // Fallback to single GEMINI_KEY if no numbered keys found
+    // Fallback to single GROQ_API_KEY if no numbered keys found
     if (this.keys.length === 0) {
-      const fallback = process.env.GEMINI_KEY;
+      const fallback = process.env.GROQ_API_KEY;
       if (fallback && fallback.trim()) {
         this.keys.push(fallback.trim());
       }
     }
 
     if (this.keys.length === 0) {
-      console.error('[gemini] ⚠️  No Gemini API keys found in environment!');
+      console.error('[groq] ⚠️  No Groq API keys found in environment!');
     } else {
-      console.log(`[gemini] Loaded ${this.keys.length} API key(s)`);
+      console.log(`[groq] Loaded ${this.keys.length} API key(s)`);
     }
 
     /** @type {number} Round-robin index */
@@ -65,16 +73,16 @@ class KeyManager {
   /** Get the next key via round-robin. */
   nextKey() {
     if (this.keys.length === 0) {
-      throw new Error('No Gemini API keys configured');
+      throw new Error('No Groq API keys configured');
     }
     const key = this.keys[this._index % this.keys.length];
     this._index = (this._index + 1) % this.keys.length;
     return key;
   }
 
-  /** Get a GoogleGenerativeAI client initialized with the current round-robin key. */
+  /** Get a Groq client initialized with the current round-robin key. */
   getClient() {
-    return new GoogleGenerativeAI(this.nextKey());
+    return new Groq({ apiKey: this.nextKey() });
   }
 
   /** Total number of available keys. */
@@ -86,10 +94,10 @@ class KeyManager {
 const keyManager = new KeyManager();
 
 /**
- * Returns a GoogleGenerativeAI client initialized with the current key.
+ * Returns a Groq client initialized with the current key.
  * Each call advances the round-robin index.
  */
-export function getGeminiClient() {
+export function getGroqClient() {
   return keyManager.getClient();
 }
 
@@ -98,17 +106,19 @@ export function getGeminiClient() {
  */
 function isRetryableError(err) {
   if (!err) return false;
-  const status = err.status || err.httpStatusCode || err?.errorDetails?.[0]?.httpStatusCode;
+  const status = err.status || err.statusCode || err?.error?.status;
   if (status === 429 || status === 503) return true;
   const msg = (err.message || '').toLowerCase();
   return (
     msg.includes('quota') ||
     msg.includes('rate limit') ||
+    msg.includes('rate_limit') ||
     msg.includes('resource exhausted') ||
     msg.includes('service unavailable') ||
     msg.includes('high demand') ||
     msg.includes('try again') ||
-    msg.includes('overloaded')
+    msg.includes('overloaded') ||
+    msg.includes('tokens per minute')
   );
 }
 
@@ -116,46 +126,60 @@ function isRetryableError(err) {
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
 /**
- * Execute a Gemini call with automatic key rotation on 429 / 503 errors.
+ * Execute a Groq call with automatic key rotation on 429 / 503 errors.
+ * All calls are wrapped inside a CascadeFlow session for observability.
  * - On 429 (quota): rotates to the next key immediately.
  * - On 503 (overload): waits 1 s then retries (same or next key).
  * Tries each available key up to 2 times before giving up.
  *
- * @param {(client: GoogleGenerativeAI) => Promise<any>} fn
+ * @param {(client: Groq) => Promise<any>} fn
  * @returns {Promise<any>}
  */
 async function withKeyRotation(fn) {
   const maxAttempts = Math.max(keyManager.count * 2, 3); // at least 3 tries
   let lastError;
 
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const client = keyManager.getClient();
-    try {
-      return await fn(client);
-    } catch (err) {
-      lastError = err;
-      if (!isRetryableError(err) || attempt >= maxAttempts - 1) throw err;
+  // Wrap all LLM calls inside a CascadeFlow session for cost tracking
+  return cascadeflow.run({ budget: 1.0, compliance: 'relaxed' }, async () => {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const client = keyManager.getClient();
+      try {
+        return await fn(client);
+      } catch (err) {
+        lastError = err;
+        if (!isRetryableError(err) || attempt >= maxAttempts - 1) throw err;
 
-      const status = err.status || err.httpStatusCode || err?.errorDetails?.[0]?.httpStatusCode;
-      if (status === 503) {
-        // Model overloaded — brief wait before retry helps more than instant key swap
-        const delay = 1000 * (attempt + 1); // 1 s, 2 s, ...
-        console.warn(`[gemini] 503 overloaded on attempt ${attempt + 1}, waiting ${delay}ms before retry…`);
-        await sleep(delay);
-      } else {
-        console.warn(`[gemini] Key #${((keyManager._index - 1 + keyManager.count) % keyManager.count) + 1} hit quota limit, rotating to next key…`);
+        const status = err.status || err.statusCode || err?.error?.status;
+        if (status === 503) {
+          const delay = 1000 * (attempt + 1);
+          console.warn(`[groq] 503 overloaded on attempt ${attempt + 1}, waiting ${delay}ms before retry…`);
+          await sleep(delay);
+        } else {
+          console.warn(`[groq] Key #${((keyManager._index - 1 + keyManager.count) % keyManager.count) + 1} hit rate limit, rotating to next key…`);
+        }
       }
     }
-  }
 
-  throw lastError;
+    throw lastError;
+  });
 }
 
-console.log(`[gemini] Using model: ${GEMINI_MODEL}`);
+console.log(`[groq] Using model: ${LLM_MODEL}`);
 
 /**
- * Call Gemini with a conversation history.
- * systemPrompt is injected into the FIRST user turn (no system role).
+ * Convert history [{role:'user'|'model', parts:[{text}]}]
+ * to OpenAI-style messages [{role:'user'|'assistant', content}].
+ */
+function convertHistory(history) {
+  return history.map(entry => ({
+    role: entry.role === 'model' ? 'assistant' : entry.role,
+    content: entry.parts?.[0]?.text || '',
+  }));
+}
+
+/**
+ * Call the LLM with a conversation history.
+ * systemPrompt is injected as a system message on the first turn.
  * History is trimmed to last 15 turns (30 messages) before calling.
  * GUARDRAIL is always appended to systemPrompt.
  *
@@ -164,31 +188,36 @@ console.log(`[gemini] Using model: ${GEMINI_MODEL}`);
  * @param {string|null} systemPrompt - injected only on first turn
  * @returns {Promise<string>} AI text response
  */
-export async function callGemini(history, userMessage, systemPrompt = null) {
+export async function callLLM(history, userMessage, systemPrompt = null) {
   // Trim to last 15 turns (each turn = one {role,parts} entry)
   const MAX_TURNS = 15;
   let trimmedHistory = history.length > MAX_TURNS
     ? history.slice(history.length - MAX_TURNS)
     : [...history];
 
+  // Build OpenAI-format messages array
+  const messages = [];
+
   // On the very first message, prepend system prompt + guardrail
-  let firstUserText = userMessage;
   if (trimmedHistory.length === 0 && systemPrompt) {
     const fullPrompt = `${systemPrompt}\n\n${GUARDRAIL}`;
-    firstUserText = `${fullPrompt}\n\n---\n\n${userMessage}`;
+    messages.push({ role: 'system', content: fullPrompt });
   }
 
+  // Convert existing history → OpenAI format
+  messages.push(...convertHistory(trimmedHistory));
+
+  // Add the new user message
+  messages.push({ role: 'user', content: userMessage });
+
   return withKeyRotation(async (client) => {
-    const model = client.getGenerativeModel({
-      model: GEMINI_MODEL,
-      generationConfig: {
-        maxOutputTokens: 300,
-        temperature: 0.85,
-      },
+    const completion = await client.chat.completions.create({
+      model: LLM_MODEL,
+      messages,
+      max_tokens: 300,
+      temperature: 0.85,
     });
-    const chat = model.startChat({ history: trimmedHistory });
-    const result = await chat.sendMessage(firstUserText);
-    return result.response.text();
+    return completion.choices[0]?.message?.content || '';
   });
 }
 
@@ -221,9 +250,9 @@ Max 4 lines.`;
 /**
  * Mentor chat channel — private career coaching, separate history from team chat.
  */
-export async function callMentorGemini(history, userMessage, scenario) {
+export async function callMentorLLM(history, userMessage, scenario) {
   const mentorSystemPrompt = buildMentorPrompt(scenario);
-  return callGemini(history, userMessage, history.length === 0 ? mentorSystemPrompt : null);
+  return callLLM(history, userMessage, history.length === 0 ? mentorSystemPrompt : null);
 }
 
 /**
@@ -236,9 +265,9 @@ export async function evaluateSession({ role, messages, tasksCompleted, emergenc
     .map(m => `[${m.senderType === 'user' ? 'User' : m.sender}]: ${m.content}`)
     .join('\n');
 
-  const prompt = `You are an expert workplace performance evaluator. Analyze the following work simulation transcript and return ONLY a valid JSON object.
+  const systemMessage = `You are an expert workplace performance evaluator. Analyze work simulation transcripts and return ONLY a valid JSON object. No markdown fences, no backticks, no explanation, no extra text.`;
 
-IMPORTANT: Return ONLY the raw JSON object below — no markdown fences, no backticks, no explanation, no extra text whatsoever.
+  const userPrompt = `Analyze the following work simulation transcript and return ONLY a valid JSON object.
 
 Role: ${role.toUpperCase()}
 Tasks completed: ${tasksCompleted.length}/${totalTasks}
@@ -263,23 +292,24 @@ Return this exact JSON structure with ONLY these fields:
 }`;
 
   return withKeyRotation(async (client) => {
-    const evaluatorModel = client.getGenerativeModel({
-      model: GEMINI_MODEL,
-      generationConfig: {
-        maxOutputTokens: 4096,
-        temperature: 0.4,
-        responseMimeType: 'application/json',
-      },
+    const completion = await client.chat.completions.create({
+      model: LLM_MODEL,
+      messages: [
+        { role: 'system', content: systemMessage },
+        { role: 'user', content: userPrompt },
+      ],
+      max_tokens: 4096,
+      temperature: 0.4,
+      response_format: { type: 'json_object' },
     });
 
-    const result = await evaluatorModel.generateContent(prompt);
-    const raw = result.response.text().trim();
+    const raw = (completion.choices[0]?.message?.content || '').trim();
 
     // Robustly extract the outermost JSON object, regardless of surrounding text or fences
     const jsonStart = raw.indexOf('{');
     const jsonEnd = raw.lastIndexOf('}');
     if (jsonStart === -1 || jsonEnd === -1 || jsonEnd <= jsonStart) {
-      throw new Error(`No JSON object found in Gemini response: ${raw.slice(0, 200)}`);
+      throw new Error(`No JSON object found in LLM response: ${raw.slice(0, 200)}`);
     }
     const cleaned = raw.slice(jsonStart, jsonEnd + 1);
     return JSON.parse(cleaned);
