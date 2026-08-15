@@ -1,13 +1,13 @@
 # WorkPod
 
-An AI-powered workplace simulation platform. Practice real job scenarios with AI teammates, handle live emergencies, collaborate with other humans in multiplayer, and get a scored performance report powered by Groq (Llama 3.3) & Hindsight Long-Term Memory.
+An AI-powered workplace simulation platform. Practice real job scenarios with AI teammates, handle live emergencies, collaborate with other humans in multiplayer, and get a scored performance report powered by Groq GPT & Hindsight Long-Term Memory.
 
 ---
 
 ## Features
 
 - **5 Roles** — Software Engineer, HR Manager, Product Manager, SDE Intern, ML Intern
-- **AI Teammates** — Groq-powered personas (`llama-3.3-70b-versatile`) orchestrated via CascadeFlow that stay fully in character
+- **AI Teammates** — Groq-powered personas (`openai/gpt-oss-120b`) orchestrated via CascadeFlow that stay fully in character
 - **Hindsight Long-Term Memory** — Remembers past user struggles, session scores, and feedback per user/role combination to personalize mentor guidance over time
 - **Progress Dashboard** — Personal analytics view with SVG line charts tracking Overall Score, Communication, Task Management, and Pressure Handling trends across all sessions
 - **Portfolio** — Role-based performance cards with skill-bar breakdowns and a scrollable session timeline showing your full WorkPod journey
@@ -49,24 +49,18 @@ MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=any_random_secret_string
 CLIENT_URL=http://localhost:5173
 
-# LLM Model (optional — defaults to llama-3.3-70b-versatile)
-LLM_MODEL=llama-3.3-70b-versatile
+# LLM Model (optional — defaults to openai/gpt-oss-120b)
+LLM_MODEL=openai/gpt-oss-120b
 
-# Groq API keys — supply one or many for round-robin rotation & quota failover
-GROQ_API_KEY=your_primary_groq_api_key
-GROQ_API_KEY_1=
-GROQ_API_KEY_2=
-GROQ_API_KEY_3=
-GROQ_API_KEY_4=
-GROQ_API_KEY_5=
-GROQ_API_KEY_6=
+# Groq API key
+GROQ_API_KEY=your_groq_api_key_here
 
 # Hindsight Memory API (Vectorize.io Cloud or Local Docker)
 HINDSIGHT_BASE_URL=https://api.vectorize.io/hindsight
 HINDSIGHT_API_KEY=your_hindsight_api_key
 ```
 
-> The server reads all numbered key variants in order and rotates through them automatically. Any key that hits a 429 quota error is skipped and the next one is tried. Falls back to `GROQ_API_KEY` if no numbered keys are set. All LLM calls are observed via `@cascadeflow/core`.
+> All LLM calls are wrapped in `@cascadeflow/core` sessions for automatic cost tracking, latency monitoring, and per-session budget observability.
 
 **Client** — copy `.env.example` → `.env`:
 ```env
@@ -100,7 +94,7 @@ Open `http://localhost:5173`
 | Backend | Node.js + Express |
 | Database | MongoDB + Mongoose |
 | Auth | JWT (bcrypt) + guest mode (localStorage ID) |
-| AI / LLM | Groq Llama 3.3 70B via `groq-sdk` & `@cascadeflow/core` (Chat, Mentor & Evaluation) |
+| AI / LLM | Groq GPT (`openai/gpt-oss-120b`) via `groq-sdk` & `@cascadeflow/core` (Chat, Mentor & Evaluation) |
 | Long-Term Memory | `@vectorize-io/hindsight-client` (Per-user/per-role memory retention & recall) |
 | Voice | Web Speech API (Chrome only) |
 
@@ -269,10 +263,10 @@ WorkPod/
 
 Three core sub-systems power the simulation's intelligence:
 
-### 1. Groq + CascadeFlow Orchestration
-All LLM requests are processed through `@cascadeflow/core` in observe mode with automated key round-robin rotation (`GROQ_API_KEY_1`..`6`).
-- **Teammate Chat & Mentor**: Uses `llama-3.3-70b-versatile` with low latency (`max_tokens: 300`, `temperature: 0.85`) to keep conversations snappy and realistic.
-- **Session Evaluator**: Uses structured JSON output enforcement (`temperature: 0.4`) to extract precise grading metrics and actionable learning roadmaps.
+### 1. CascadeFlow LLM Orchestration & Observability
+All LLM requests are wrapped in `@cascadeflow/core` sessions (`cascadeflow.run()`) with per-session budget ceilings and automatic cost/latency tracking. CascadeFlow runs in `observe` mode, recording every call's token usage, cost, and response time — providing full visibility into training session economics.
+- **Teammate Chat & Mentor**: Uses Groq `openai/gpt-oss-120b` with low latency (`max_tokens: 300`, `temperature: 0.85`) to keep conversations snappy and realistic.
+- **Session Evaluator**: Uses structured JSON output enforcement (`temperature: 0.4`, `max_tokens: 4096`) to extract precise grading metrics and actionable learning roadmaps.
 
 ### 2. Hindsight Long-Term Memory
 Powered by `@vectorize-io/hindsight-client`, memory banks are scoped strictly to the user and role (`workpod_<userId>_<role>`).

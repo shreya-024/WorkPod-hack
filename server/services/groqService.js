@@ -9,7 +9,7 @@ cascadeflow.init({ mode: 'observe' });
 console.log('[cascadeflow] Harness initialised in observe mode');
 
 // ─── Model ───────────────────────────────────────────────────────────────────
-const LLM_MODEL = process.env.LLM_MODEL || 'llama-3.3-70b-versatile';
+const LLM_MODEL = process.env.LLM_MODEL || 'openai/gpt-oss-120b';
 
 // ─── Guardrails ──────────────────────────────────────────────────────────────
 // Applied to EVERY LLM call — team chat, mentor channel, and evaluator.
@@ -26,68 +26,26 @@ Only answer questions about career growth, role-specific skills, and work within
 If the user asks anything unrelated to their career or current role, respond: "That's outside what I coach on — let's focus on your growth here."`;
 
 // ─── API Key Manager ─────────────────────────────────────────────────────────
-// Reads keys from GROQ_API_KEY_1..GROQ_API_KEY_6, falls back to the single
-// GROQ_API_KEY env var. Round-robins on each request and auto-retries with the
-// next key on 429 / quota errors.
+// Uses a single GROQ_API_KEY from environment.
 
 class KeyManager {
   constructor() {
-    /** @type {string[]} */
-    this.keys = [];
-
-    // Collect keys from numbered env vars
-    const envNames = [
-      'GROQ_API_KEY_1',
-      'GROQ_API_KEY_2',
-      'GROQ_API_KEY_3',
-      'GROQ_API_KEY_4',
-      'GROQ_API_KEY_5',
-      'GROQ_API_KEY_6',
-    ];
-
-    for (const name of envNames) {
-      const val = process.env[name];
-      if (val && val.trim()) {
-        this.keys.push(val.trim());
-      }
-    }
-
-    // Fallback to single GROQ_API_KEY if no numbered keys found
-    if (this.keys.length === 0) {
-      const fallback = process.env.GROQ_API_KEY;
-      if (fallback && fallback.trim()) {
-        this.keys.push(fallback.trim());
-      }
-    }
-
-    if (this.keys.length === 0) {
-      console.error('[groq] ⚠️  No Groq API keys found in environment!');
+    const key = process.env.GROQ_API_KEY;
+    if (!key || !key.trim()) {
+      console.error('[groq] ⚠️  GROQ_API_KEY not found in environment!');
+      this.key = null;
     } else {
-      console.log(`[groq] Loaded ${this.keys.length} API key(s)`);
+      this.key = key.trim();
+      console.log('[groq] Loaded GROQ_API_KEY');
     }
-
-    /** @type {number} Round-robin index */
-    this._index = 0;
   }
 
-  /** Get the next key via round-robin. */
-  nextKey() {
-    if (this.keys.length === 0) {
-      throw new Error('No Groq API keys configured');
-    }
-    const key = this.keys[this._index % this.keys.length];
-    this._index = (this._index + 1) % this.keys.length;
-    return key;
-  }
-
-  /** Get a Groq client initialized with the current round-robin key. */
+  /** Get a Groq client initialized with the API key. */
   getClient() {
-    return new Groq({ apiKey: this.nextKey() });
-  }
-
-  /** Total number of available keys. */
-  get count() {
-    return this.keys.length;
+    if (!this.key) {
+      throw new Error('No Groq API key configured');
+    }
+    return new Groq({ apiKey: this.key });
   }
 }
 
@@ -126,17 +84,16 @@ function isRetryableError(err) {
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
 /**
- * Execute a Groq call with automatic key rotation on 429 / 503 errors.
+ * Execute a Groq call with automatic retry on 503 errors.
  * All calls are wrapped inside a CascadeFlow session for observability.
- * - On 429 (quota): rotates to the next key immediately.
- * - On 503 (overload): waits 1 s then retries (same or next key).
- * Tries each available key up to 2 times before giving up.
+ * - On 503 (overload): waits then retries.
+ * Tries up to 3 times before giving up.
  *
  * @param {(client: Groq) => Promise<any>} fn
  * @returns {Promise<any>}
  */
 async function withKeyRotation(fn) {
-  const maxAttempts = Math.max(keyManager.count * 2, 3); // at least 3 tries
+  const maxAttempts = 3;
   let lastError;
 
   // Wrap all LLM calls inside a CascadeFlow session for cost tracking
@@ -155,7 +112,7 @@ async function withKeyRotation(fn) {
           console.warn(`[groq] 503 overloaded on attempt ${attempt + 1}, waiting ${delay}ms before retry…`);
           await sleep(delay);
         } else {
-          console.warn(`[groq] Key #${((keyManager._index - 1 + keyManager.count) % keyManager.count) + 1} hit rate limit, rotating to next key…`);
+          console.warn(`[groq] Rate limit encountered, retrying on attempt ${attempt + 1}…`);
         }
       }
     }
