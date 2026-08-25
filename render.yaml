@@ -1,0 +1,22 @@
+{
+  "services": [
+    {
+      "type": "web",
+      "runtime": "node",
+      "name": "workpod-server",
+      "rootDir": "server",
+      "buildCommand": "npm install",
+      "startCommand": "npm start",
+      "envVars": [
+        { "key": "NODE_ENV", "value": "production" },
+        { "key": "PORT", "value": "10000" },
+        { "key": "MONGO_URI", "sync": false },
+        { "key": "JWT_SECRET", "generateValue": true },
+        { "key": "GROQ_API_KEY", "sync": false },
+        { "key": "CLIENT_URL", "sync": false },
+        { "key": "HINDSIGHT_BASE_URL", "sync": false },
+        { "key": "HINDSIGHT_API_KEY", "sync": false }
+      ]
+    }
+  ]
+}
